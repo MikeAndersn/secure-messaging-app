@@ -51,7 +51,7 @@
             return bytes.toString(CryptoJS.enc.Utf8);
         }
 
-        var socket = io("http://127.0.0.1:5001");
+        const socket = io("http://127.0.0.1:5001"); // Replace with your local IP if you want to run different devices on the same network
     
         socket.on("connect", function() {
             console.log("✅ Connected to WebSocket server");
