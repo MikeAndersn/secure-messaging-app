@@ -1,0 +1,6 @@
+flask
+flask-socketio
+eventlet
+gunicorn
+pycryptodome  # Required for encryption (Crypto module)
+

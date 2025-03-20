@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #chatBox {
+            width: 80%;
+            max-width: 600px;
+            height: 300px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            margin: 20px auto;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        #messageInput {
+            width: 60%;
+            padding: 10px;
+        }
+        button {
+            padding: 10px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Secure Messaging App</h1>
+    <div id="chatBox"></div>
+    <input id="messageInput" type="text" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        var encryptionKey = "1234567890123456"; // Must be 16, 24, or 32 bytes
+
+        function encryptMessage(message) {
+            return CryptoJS.AES.encrypt(message, encryptionKey).toString();
+        }
+
+        function decryptMessage(encryptedMessage) {
+            var bytes = CryptoJS.AES.decrypt(encryptedMessage, encryptionKey);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        }
+
+        var socket = io("http://127.0.0.1:5001");
+    
+        socket.on("connect", function() {
+            console.log("✅ Connected to WebSocket server");
+        });
+    
+        function sendMessage() {
+            var msg = document.getElementById("messageInput").value;
+            var encrytpedMsg = encryptMessage(msg); // Encrypt before sending
+            console.log("📩 Sending Encrypted Message: " + encrytpedMsg);
+            socket.emit("message", encrytpedMsg);  // Ensure "message" event is used
+            document.getElementById("messageInput").value = "";
+        }
+    
+        socket.on("message", function(data) {
+            console.log("📩 Received Encrypted Message:", data);
+            var decryptedMsg = decryptMessage(data);
+            console.log("📩 Decrypted Message: " + decryptedMsg);
+    
+            var chatBox = document.getElementById("chatBox");
+            var newMessage = document.createElement("p");
+            newMessage.innerText = decryptedMsg;
+            chatBox.appendChild(newMessage);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
+        });
+    
+        socket.on("connect_error", function(error) {
+            console.error("❌ WebSocket Connection Error:", error);
+        });
+    
+        socket.on("disconnect", function() {
+            console.warn("⚠️ WebSocket Disconnected");
+        });
+    </script>
+</body>
+</html>
